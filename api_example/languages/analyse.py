@@ -11,10 +11,6 @@ MS = "mediaserver"
 CBL = "capacitybasedlicensing"
 LIC = "licensescategory"
 
-#Different License types
-dpLicenses = ["Micro Focus Data Protector Express - per CPU",
-              "Micro Focus Data Protector Premium - per CPU"]
-
 HOST = "host"
 OS = "os"
 DEVTYPE = "devicetype"
@@ -22,6 +18,8 @@ USAGE = "usage"
 BTYPE = "backuptype"
 PROTECTEDDATA = "totalprotecteddata"
 VER = "ver"
+OSID="osid"
+BS = "backupsize"
 
 ANALYSED_DATA = {}
 
@@ -33,7 +31,7 @@ def initCsvFiles():
 
     with open('CM.csv', 'w+', newline='') as cmcsv:
         writer = csv.writer(cmcsv, delimiter=',')
-        row = ["uuid","os","ver"]
+        row = ["uuid","os","ver","osid","sessions"]
         writer.writerow(row)
     cmcsv.close()
 
@@ -45,7 +43,7 @@ def initCsvFiles():
 
     with open('CLIENTS.csv', 'w+', newline='') as clicsv:
         writer = csv.writer(clicsv, delimiter=',')
-        row = ["clients","os","ver"]
+        row = ["clients","os","ver","osid"]
         writer.writerow(row)
     clicsv.close()
 
@@ -67,15 +65,33 @@ def getCellDetails(json_data):
     cellserver = json_data[CS]
     osType = -1
     dpVer = -1
+    osID = -1
+    totalSessions = -1
+    if BS in json_data:
+        totalSessions = len(json_data[BS])
+    print(totalSessions)
     clients_json = json_data[CLIENTS]
     for client in clients_json:
         try:
             # Writing to CM.csv uuid,os type
             if client[HOST] == cellserver:
                 osType = client[OS]
-
+                if (osType.find("microsoft")!=-1):
+                    osID = "W"
+                elif (osType.find("Windows")!=-1):
+                    osID = "W"
+                elif (osType.find("gpl")!=-1):
+                    osID = "L"
+                elif (osType.find("linux")!=-1):
+                    osID = "L"
+                elif (osType.find("hp")!=-1):
+                    osID = "H"
+                elif (osType.find("vmwarehost")!=-1):
+                    osID = "V"
+                else:
+                    osID = "O"
                 dpVer = client['ts_as']
-                row = [uuid, osType, dpVer]
+                row = [uuid, osType, dpVer, osID, totalSessions]
                 print("cellmanager is " + client[HOST] + " And OS is "+ client[OS])
                 with open('CM.csv','a',newline='') as cmcsv:
                     writer = csv.writer(cmcsv, delimiter=',')
@@ -85,10 +101,24 @@ def getCellDetails(json_data):
             # Writing to CLIENTS.csv
             else:
                 osType = client[OS]
+                if (osType.find("microsoft")!=-1):
+                    osID = "W"
+                elif (osType.find("Windows")!=-1):
+                    osID = "W"
+                elif (osType.find("gpl")!=-1):
+                    osID = "L"
+                elif (osType.find("linux")!=-1):
+                    osID = "L"
+                elif (osType.find("hp")!=-1):
+                    osID = "H"
+                elif (osType.find("vmwarehost")!=-1):
+                    osID = "V"
+                else:
+                    osID = "0"
                 for key in client.keys():
                     if inList(key):
                         dpVer = client[key]
-                row = [client['host'], osType, dpVer]
+                row = [client['host'], osType, dpVer,osID]
                 with open('CLIENTS.csv','a',newline='') as clicsv:
                     writer = csv.writer(clicsv, delimiter=',')
                     writer.writerow(row)
@@ -177,8 +207,26 @@ def analyseCsv():
     CM_OS = {}
     CM_VER = {}
     CM_OS_DF = CM_DF[OS]
+    CM_OSID_DF = CM_DF[OSID]
     CM_VER_DF = CM_DF[VER]
     CM_TOTAL = CM_DF[UUID].count()
+    CM_WIN_TOTAL = 0
+    CM_LIN_TOTAL = 0
+    CM_HPUX_TOTAL = 0
+    CM_VMWARE_TOTAL = 0
+    CM_OTHERS_TOTAL = 0
+
+    for i in CM_OSID_DF:
+        if i == "W":
+            CM_WIN_TOTAL = CM_WIN_TOTAL + 1
+        elif i == "L":
+            CM_LIN_TOTAL = CM_LIN_TOTAL + 1
+        elif i == "H":
+            CM_HPUX_TOTAL = CM_HPUX_TOTAL + 1
+        elif i == "V":
+            CM_VMWARE_TOTAL = CM_VMWARE_TOTAL + 1
+        else :
+            CM_OTHERS_TOTAL = CM_OTHERS_TOTAL + 1
 
     for i in CM_OS_DF:
         if i in CM_OS:
@@ -192,10 +240,17 @@ def analyseCsv():
         else:
             CM_VER[i] = 1
 
+    TOTAL_SESSIONS = CM_DF["sessions"].sum()
 
     ANALYSED_DATA["CM_TOTAL"] = CM_TOTAL
+    ANALYSED_DATA["CM_WIN_TOTAL"] = CM_WIN_TOTAL
+    ANALYSED_DATA["CM_LIN_TOTAL"] = CM_LIN_TOTAL
+    ANALYSED_DATA["CM_HPUX_TOTAL"] = CM_HPUX_TOTAL
+    ANALYSED_DATA["CM_VMWARE_TOTAL"] = CM_VMWARE_TOTAL
+    ANALYSED_DATA["CM_OTHERS_TOTAL"] = CM_OTHERS_TOTAL
     ANALYSED_DATA["CM_VER"] = CM_VER
     ANALYSED_DATA["CM_OS"] = CM_OS
+    ANALYSED_DATA["CM_SESSIONS"] = TOTAL_SESSIONS
 
 
     #CLIENTS.csv analysis
@@ -203,8 +258,26 @@ def analyseCsv():
     CLIENTS_OS = {}
     CLIENTS_VER = {}
     CLIENTS_OS_DF = CLIENTS_DF[OS]
+    CLIENTS_OSID_DF = CLIENTS_DF[OSID]
     CLIENTS_VER_DF = CLIENTS_DF[VER]
     CLIENTS_TOTAL = CLIENTS_DF[OS].count()
+    CLIENTS_WIN_TOTAL = 0
+    CLIENTS_LIN_TOTAL = 0
+    CLIENTS_HPUX_TOTAL = 0
+    CLIENTS_VMWARE_TOTAL = 0
+    CLIENTS_OTHERS_TOTAL = 0
+
+    for i in CLIENTS_OSID_DF:
+        if i == "W":
+            CLIENTS_WIN_TOTAL = CLIENTS_WIN_TOTAL + 1
+        elif i == "L":
+            CLIENTS_LIN_TOTAL = CLIENTS_LIN_TOTAL + 1
+        elif i == "H":
+            CLIENTS_HPUX_TOTAL = CLIENTS_HPUX_TOTAL + 1
+        elif i == "V":
+            CLIENTS_VMWARE_TOTAL = CLIENTS_VMWARE_TOTAL + 1
+        else :
+            CLIENTS_OTHERS_TOTAL = CLIENTS_OTHERS_TOTAL + 1
 
     for i in CLIENTS_OS_DF:
         if i in CLIENTS_OS:
@@ -218,7 +291,13 @@ def analyseCsv():
         else:
             CLIENTS_VER[i] = 1
 
+
     ANALYSED_DATA["CLIENTS_TOTAL"] = CLIENTS_TOTAL
+    ANALYSED_DATA["CLIENTS_WIN_TOTAL"] = CLIENTS_WIN_TOTAL
+    ANALYSED_DATA["CLIENTS_LIN_TOTAL"] = CLIENTS_LIN_TOTAL
+    ANALYSED_DATA["CLIENTS_HPUX_TOTAL"] = CLIENTS_HPUX_TOTAL
+    ANALYSED_DATA["CLIENTS_VMWARE_TOTAL"] = CLIENTS_VMWARE_TOTAL
+    ANALYSED_DATA["CLIENTS_OTHERS_TOTAL"] = CLIENTS_OTHERS_TOTAL
     ANALYSED_DATA["CLIENTS_VER"] = CLIENTS_VER
     ANALYSED_DATA["CLIENTS_OS"] = CLIENTS_OS
 
@@ -240,7 +319,7 @@ def analyseCsv():
     BACKUP_INFO = {}
 
     for index, row in BD_DF.iterrows():
-        if row["BackupType"] in MEDIA_INFO:
+        if row["BackupType"] in BACKUP_INFO:
             BACKUP_INFO[row["BackupType"]] = BACKUP_INFO[row["BackupType"]] + row["DataProtected"]
         else:
             BACKUP_INFO[row["BackupType"]] = row["DataProtected"]
@@ -249,7 +328,19 @@ def analyseCsv():
 
     # LIC.csv analysis
     LIC_DF = pd.read_csv("LIC.csv")
+    LIC_CAT = LIC_DF["category"]
+    LIC_CAP = 0
+    LIC_EXPRESS = 0
+    LIC_PREMIUM = 0
     LIC_INFO = {}
+
+    for i in LIC_CAT:
+        if i.find("Express") != -1:
+            LIC_EXPRESS = LIC_EXPRESS + 1
+        elif i.find("Premium") != -1:
+            LIC_PREMIUM = LIC_PREMIUM + 1
+        else:
+            LIC_CAP = LIC_CAP + 1
 
     for index, row in LIC_DF.iterrows():
         if row["category"] in LIC_INFO:
@@ -258,6 +349,9 @@ def analyseCsv():
             LIC_INFO[row["category"]] = row["value"]
 
     ANALYSED_DATA["LIC_INFO"] = LIC_INFO
+    ANALYSED_DATA["LIC_EXPRESS"] = LIC_EXPRESS
+    ANALYSED_DATA["LIC_PREMIUM"] = LIC_PREMIUM
+    ANALYSED_DATA["LIC_CAPACITY"] = LIC_CAP
 
 
 def main():
@@ -268,7 +362,6 @@ def main():
     #generate ANALYSED_DATA output dictionary
     analyseCsv()
     return ANALYSED_DATA
-
 
 #main()
 #for k in json_data.keys():

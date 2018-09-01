@@ -1,8 +1,7 @@
 from django.shortcuts import render
 
 from rest_framework import viewsets
-from .models import Language,CM_OS_MODEL,CLIENTS_OS_MODEL,TOTAL_MODEL
-from .models import  PostFile
+from .models import *
 from .serializers import  LanguageSerializer
 from .serializers import  *
 
@@ -19,7 +18,7 @@ class CLIENT_OS_VIEW(viewsets.ModelViewSet):
     serializer_class = CLIENTS_OS_S  
 
 class TOTAL_VIEW(viewsets.ModelViewSet):
-    queryset = TOTAL_MODEL.objects.all()
+    queryset = TOTAL_MODEL_ALL2.objects.all()
     serializer_class = TOTAL_S
 
 class CM_VERSION_VIEW(viewsets.ModelViewSet):
