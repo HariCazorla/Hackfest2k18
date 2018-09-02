@@ -59,7 +59,7 @@
                         <div class="right_col" role="main">
                             <div class="">
                               <div class="row top_tiles">
-                                  <a href = "#backupInfo">
+                                  
                                 <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                   <div class="tile-stats">
                                     <div class="icon"><i class="fa fa-caret-square-o-right"></i></div>
@@ -67,7 +67,7 @@
                                     <h3><font color="black">Cell Managers</font></h3>
                                   </div>
                                 </div>
-                                </a>
+                                
                                 <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                   <div class="tile-stats">
                                     <div class="icon"><i class="fa fa-comments-o"></i></div>
@@ -144,10 +144,10 @@
                                             </ul>
                                             <div class="clearfix"></div>
                                           </div>
-                                          <div  *ngIf="chart2 && graph == 0" class="x_content">
+                                          <div  *ngIf="chart2 && graph == 1" class="x_content">
                                             <canvas id="CM_OS"></canvas>
                                           </div>
-                                          <div  *ngIf="chart8 && graph == 1" class="x_content">
+                                          <div  *ngIf="chart8 && graph == 0" class="x_content">
                                               <canvas id="CM_TOTAL_3"></canvas>
                                             </div>
                                         </div>
@@ -294,10 +294,10 @@
                                             </ul>
                                             <div class="clearfix"></div>
                                           </div>
-                                          <div *ngIf="chart7 && graph1 == 0" class="x_content">
+                                          <div *ngIf="chart7 && graph1 == 1" class="x_content">
                                             <canvas id="LIC_INFO"></canvas>
                                           </div>
-                                          <div  *ngIf="chart9 && graph1 == 1" class="x_content">
+                                          <div  *ngIf="chart9 && graph1 == 0" class="x_content">
                                               <canvas id="LIC_INFO_3"></canvas>
                                             </div>
                                         </div>
